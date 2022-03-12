@@ -4,6 +4,7 @@ import argparse
 import datetime
 import json
 import pathlib
+import time
 import requests
 import shutil
 import sys
@@ -18,7 +19,7 @@ API_URL = 'https://shadowban.hmpf.club/'
 JSON_PATH = pathlib.Path(sys.argv[0]).parent / 'ShadowbanAlerts.json'
 
 # バージョン情報
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
 
     # 引数解析
     parser = argparse.ArgumentParser(
-        description='Twitter アカウントが Shadowban されているかを確認し、Shadowban されていたら Discord に通知するツール',
+        description='Twitter アカウントへのシャドウバンが開始・解除された時に Discord に通知するツール',
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument('-v', '--version', action='version', help='バージョン情報を表示する', version='ShadowbanAlerts version ' + VERSION)
@@ -41,7 +42,7 @@ def main():
     print('=' * terminal_columns)
 
     if len(SCREEN_NAMES) == 0:
-        print('エラー: スクリーンネームが指定されていません。')
+        print('Error: スクリーンネームが指定されていません。')
         print('=' * terminal_columns)
         sys.exit(1)
 
@@ -59,7 +60,7 @@ def main():
 
     # まだ JSON がなければ初期値を設定
     if JSON_PATH.exists() is False:
-        initial_save_data = {}
+        initial_save_data = {'LastUpdatedAt': time.time()}
         for screen_name in SCREEN_NAMES:
             initial_save_data[screen_name.replace('@', '')] = {
                 'SearchSuggestionBan': False,
@@ -74,28 +75,42 @@ def main():
     with open(JSON_PATH, mode='r', encoding='utf-8') as fp:
         save_data = json.load(fp)
 
+    # 前回の更新時刻
+    print(f'Last Updated Time : {datetime.datetime.fromtimestamp(save_data["LastUpdatedAt"]).strftime("%Y/%m/%d %H:%M:%S")}')
+    print(f'Current Time      : {datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")}')
+    print('-' * terminal_columns)
+
     # スクリーンネームごとに実行
     for screen_name in SCREEN_NAMES:
 
         # @ が付かない方に統一
         screen_name = screen_name.replace('@', '')
 
+        # 前回の値がないなら初期値をセット
+        if screen_name not in save_data:
+            save_data[screen_name] = {
+                'SearchSuggestionBan': False,
+                'SearchBan': False,
+                'GhostBan': False,
+                'ReplyDeboosting':  False,
+            }
+
         # API にリクエスト
         response = requests.get(f'{API_URL}{screen_name}', headers={'user-agent': f'ShadowbanAlerts/{VERSION}'})
         if response.status_code != 200:
-            print(f'エラー: Twitter Shadowban Test の API アクセスに失敗しました。(HTTP Error {response.status_code})')
+            print(f'Error: Twitter Shadowban Test の API アクセスに失敗しました。(HTTP Error {response.status_code})')
             print('-' * terminal_columns)
             continue
         if 'protected' in response.json()['profile'] and response.json()['profile']['protected'] == True:
-            print(f'エラー: @{screen_name} は鍵アカウントです。')
+            print(f'Error: @{screen_name} は鍵アカウントです。')
             print('-' * terminal_columns)
             continue
         if 'suspend' in response.json()['profile'] and response.json()['profile']['suspended'] == True:
-            print(f'エラー: @{screen_name} は凍結されています。')
+            print(f'Error: @{screen_name} は凍結されています。')
             print('-' * terminal_columns)
             continue
         if response.json()['profile']['exists'] == False:
-            print(f'エラー: @{screen_name} は存在しません。')
+            print(f'Error: @{screen_name} は存在しません。')
             print('-' * terminal_columns)
             continue
         result = response.json()['tests']
@@ -106,19 +121,10 @@ def main():
         is_ghost_ban = result['ghost']['ban']
         is_reply_deboosting = result['more_replies']['ban']
         print(f'@{screen_name} Shadowban Status:')
-        print(f'Search Suggestion Ban : {is_search_suggestion_ban}')
-        print(f'Search Ban            : {is_search_ban}')
-        print(f'Ghost Ban             : {is_ghost_ban}')
-        print(f'Reply Deboosting      : {is_reply_deboosting}')
-
-        # 前回の値がないなら初期値をセット
-        if screen_name not in save_data:
-            save_data[screen_name] = {
-                'SearchSuggestionBan': False,
-                'SearchBan': False,
-                'GhostBan': False,
-                'ReplyDeboosting':  False,
-            }
+        print(f'  Search Suggestion Ban : {is_search_suggestion_ban}')
+        print(f'  Search Ban            : {is_search_ban}')
+        print(f'  Ghost Ban             : {is_ghost_ban}')
+        print(f'  Reply Deboosting      : {is_reply_deboosting}')
 
         # 前回の値と異なっていたら通知を送る
         if save_data[screen_name]['SearchSuggestionBan'] != is_search_suggestion_ban:
@@ -140,11 +146,14 @@ def main():
 
         print('-' * terminal_columns)
 
+    # 前回の更新時刻を更新
+    save_data['LastUpdatedAt'] = time.time()
+
     # 次回実行時用にデータを保存しておく
     with open(JSON_PATH, mode='w', encoding='utf-8') as fp:
         json.dump(save_data, fp, ensure_ascii=False, indent=4)
 
-    print('実行を完了しました。')
+    print('Completed.')
     print('=' * terminal_columns)
 
 
