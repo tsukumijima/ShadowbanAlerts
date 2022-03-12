@@ -8,7 +8,7 @@ import requests
 import shutil
 import sys
 
-from ShadowbanAlertsConfig import SCREEN_NAMES, WEBHOOK_URL
+from ShadowbanAlertsConfig import SCREEN_NAMES, MENTION_TO, WEBHOOK_URL
 
 
 # Twitter Shadowban Test の API URL
@@ -49,9 +49,10 @@ def main():
     def SendDiscord(screen_name:str, ban_name:str, is_banning:bool):
         now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
         if is_banning is True:
-            message = f'https://twitter.com/{screen_name} への :warning:**{ban_name}**:warning: が **{now}** から開始されました。'
+            message = f'https://twitter.com/{screen_name} への ⚠**{ban_name}**⚠ が **{now}** から開始されました。'
         else:
-            message = f'https://twitter.com/{screen_name} への :warning:**{ban_name}**:warning: は **{now}** に解除されました。'
+            message = f'https://twitter.com/{screen_name} への ⚠**{ban_name}**⚠ は **{now}** に解除されました。'
+        message = (f'<@{MENTION_TO}> ' if MENTION_TO is not None else '') + message  # メンション先を設定
         requests.post(WEBHOOK_URL, json={
             'username': 'ShadowbanAlerts',
             'content': message,
