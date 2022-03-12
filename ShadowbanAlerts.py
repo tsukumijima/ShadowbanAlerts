@@ -4,7 +4,6 @@ import argparse
 import datetime
 import json
 import pathlib
-import time
 import requests
 import shutil
 import sys
@@ -12,7 +11,7 @@ import sys
 from ShadowbanAlertsConfig import SCREEN_NAMES, WEBHOOK_URL
 
 
-# Twitter Shadowban Test の API
+# Twitter Shadowban Test の API URL
 API_URL = 'https://shadowban.hmpf.club/'
 
 # 前回のデータを保存する JSON のパス
@@ -60,7 +59,7 @@ def main():
 
     # まだ JSON がなければ初期値を設定
     if JSON_PATH.exists() is False:
-        initial_save_data = {'LastUpdatedAt': time.time()}
+        initial_save_data = {'LastUpdatedAt': datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}
         for screen_name in SCREEN_NAMES:
             initial_save_data[screen_name.replace('@', '')] = {
                 'SearchSuggestionBan': False,
@@ -76,7 +75,7 @@ def main():
         save_data = json.load(fp)
 
     # 前回の更新時刻
-    print(f'Last Updated Time : {datetime.datetime.fromtimestamp(save_data["LastUpdatedAt"]).strftime("%Y/%m/%d %H:%M:%S")}')
+    print(f'Last Updated Time : {save_data["LastUpdatedAt"]}')
     print(f'Current Time      : {datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")}')
     print('-' * terminal_columns)
 
@@ -147,7 +146,7 @@ def main():
         print('-' * terminal_columns)
 
     # 前回の更新時刻を更新
-    save_data['LastUpdatedAt'] = time.time()
+    save_data['LastUpdatedAt'] = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 
     # 次回実行時用にデータを保存しておく
     with open(JSON_PATH, mode='w', encoding='utf-8') as fp:
