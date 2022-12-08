@@ -33,14 +33,14 @@ Discord の Webhook URL は別途取得してください。`https://discord.com
 
 ## 実行
 
-単独で実行させる場合は、`python3.9 ./ShadowbanAlerts.py` と実行します。  
+単独で実行させる場合は、`python3.10 ./ShadowbanAlerts.py` と実行します。  
 この時点でいずれかのアカウントがシャドウバンされている場合は、Discord の Webhook を設定したチャンネルに通知が送信されます。
 
 ShadowbanAlerts は常時起動機能を持ちません。継続的に実行させたい場合は、Cron やタスクスケジューラなどに ShadowbanAlerts を登録する必要があります。  
-以下に Cron で1分おきに ShadowbanAlerts を実行させる例を示します。
+以下に Cron で1分おきに ShadowbanAlerts を実行させる例を示します (`ubuntu` は一般ユーザー)。
 
 ```
-*/1 * * * * /usr/local/bin/pipenv run python3.10 /home/ubuntu/ShadowbanAlerts/ShadowbanAlerts.py
+*/1 * * * * /home/ubuntu/ShadowbanAlerts/.venv/bin/python /home/ubuntu/ShadowbanAlerts/ShadowbanAlerts.py
 ```
 
 ## License
