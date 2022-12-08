@@ -8,13 +8,13 @@ Twitter アカウントへのシャドウバンが開始・解除された時に
 ## 導入
 
 Windows でも Linux でも動くと思いますが、動作確認は Linux でしかしていません。  
-事前に Python 3.9・pip・Git がインストールされていることが前提です。
+事前に Python 3.10 / pip / pipenv / Git がインストールされていることが前提です。
 
 ```Shell
-pip3 install requests
 git clone https://github.com/tsukumijima/ShadowbanAlerts.git
 cd ShadowbanAlerts/
 cp ShadowbanAlertsConfig.example.py ShadowbanAlertsConfig.py
+PIPENV_VENV_IN_PROJECT="true" pipenv sync
 ```
 
 ## 設定
@@ -37,10 +37,10 @@ Discord の Webhook URL は別途取得してください。`https://discord.com
 この時点でいずれかのアカウントがシャドウバンされている場合は、Discord の Webhook を設定したチャンネルに通知が送信されます。
 
 ShadowbanAlerts は常時起動機能を持ちません。継続的に実行させたい場合は、Cron やタスクスケジューラなどに ShadowbanAlerts を登録する必要があります。  
-以下に Cron で1分おきに ShadowbanAlerts を実行させる例を示します（`ubuntu` は一般ユーザーです）。
+以下に Cron で1分おきに ShadowbanAlerts を実行させる例を示します。
 
 ```
-*/1 * * * * sudo -u ubuntu /usr/bin/python3.9 /home/ubuntu/ShadowbanAlerts/ShadowbanAlerts.py
+*/1 * * * * /usr/local/bin/pipenv run python3.10 /home/ubuntu/ShadowbanAlerts/ShadowbanAlerts.py
 ```
 
 ## License
