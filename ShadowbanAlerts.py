@@ -118,8 +118,10 @@ def main():
         # BAN されているかの値を取得
         is_search_suggestion_ban = not result['typeahead']  # BAN のとき False になる
         is_search_ban = not result['search']  # BAN のとき False になる
-        is_ghost_ban = result['ghost']['ban']
-        is_reply_deboosting = result['more_replies']['ban']
+        #is_ghost_ban = result['ghost']['ban']
+        #is_reply_deboosting = result['more_replies']['ban']
+        is_ghost_ban = False  # なんか検出が機能しなくなっているので当面常に False にしておく
+        is_reply_deboosting = False  # なんか検出が機能しなくなっているので当面常に False にしておく
         print(f'@{screen_name} Shadowban Status:')
         print(f'  Search Suggestion Ban : {is_search_suggestion_ban}')
         print(f'  Search Ban            : {is_search_ban}')
