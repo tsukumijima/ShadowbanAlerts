@@ -12,7 +12,7 @@ from ShadowbanAlertsConfig import SCREEN_NAMES, MENTION_TO, WEBHOOK_URL
 
 
 # Twitter Shadowban Test の API URL
-API_URL = 'https://shadowban.hmpf.club/'
+API_URL = 'https://sb.hisubway.online/'
 
 # 前回のデータを保存する JSON のパス
 JSON_PATH = pathlib.Path(sys.argv[0]).parent / 'ShadowbanAlerts.json'
