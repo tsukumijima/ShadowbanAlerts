@@ -12,7 +12,7 @@ from ShadowbanAlertsConfig import SCREEN_NAMES, MENTION_TO, WEBHOOK_URL
 
 
 # Twitter Shadowban Test の API URL
-API_URL = 'https://shadowban.elrincondelantropologo.com'
+API_URL = 'https://as.hisubway.online'
 
 # 前回のデータを保存する JSON のパス
 JSON_PATH = pathlib.Path(sys.argv[0]).parent / 'ShadowbanAlerts.json'
@@ -97,36 +97,22 @@ def main():
 
         # API にリクエスト
         session = requests.Session()
-        session.get(API_URL)  # XSRF Cookie を取得
-        response = session.post(f'{API_URL}/api/check', json={
-            'screenName': screen_name,
-        }, headers={
-            'x-requested-with': 'XMLHttpRequest',
-            'x-xsrf-token': session.cookies.get('XSRF-TOKEN').replace('%3D', '='),
-        })
+        response = session.get(f'{API_URL}/?username={screen_name}')
         if response.status_code != 200:
             print(f'Error: Twitter Shadowban Test の API アクセスに失敗しました。(HTTP Error {response.status_code})')
             print('-' * terminal_columns)
             continue
-        if 'protected' in response.json()['profile'] and response.json()['profile']['protected'] == True:
-            print(f'Error: @{screen_name} は鍵アカウントです。')
-            print('-' * terminal_columns)
-            continue
-        if 'suspend' in response.json()['profile'] and response.json()['profile']['suspended'] == True:
-            print(f'Error: @{screen_name} は凍結されています。')
-            print('-' * terminal_columns)
-            continue
-        if response.json()['profile']['isExist'] == False:
-            print(f'Error: @{screen_name} は存在しません。')
+        if response.json()['profile']['exists'] == False:
+            print(f'Error: @{screen_name} は存在しないか、凍結されています。')
             print('-' * terminal_columns)
             continue
         result = response.json()
 
         # BAN されているかの値を取得
-        is_search_suggestion_ban = not result['check']['suggest']
-        is_search_ban = True if not result['check']['search'] else False
-        is_ghost_ban = result['check']['ghost']['ban']
-        is_reply_deboosting = result['check']['reply']['ban']
+        is_search_suggestion_ban = not result['tests']['typeahead']
+        is_search_ban = False if type(result['tests'].get('search', False)) is str else True
+        is_ghost_ban = not result['tests']['ghost']
+        is_reply_deboosting = not result['tests']['more_replies']
         print(f'@{screen_name} Shadowban Status:')
         print(f'  Search Suggestion Ban : {is_search_suggestion_ban}')
         print(f'  Search Ban            : {is_search_ban}')
